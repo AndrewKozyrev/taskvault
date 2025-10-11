@@ -3,3 +3,8 @@ spring:
     name: taskvault
 server:
   port: 8080
+security:
+  jwt:
+    issuer: taskvault
+    access-ttl: 15m
+    secret: "Q0hBTkdFLU1FLVRPLUJULUFMTEFTVC0zMi1DSEFSUy1MT05HLVhYWFhYWFhYWFhYWFhY"
