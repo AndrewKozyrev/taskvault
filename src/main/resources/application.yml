@@ -7,4 +7,4 @@ security:
   jwt:
     issuer: taskvault
     access-ttl: 15m
-    secret: "Q0hBTkdFLU1FLVRPLUJULUFMTEFTVC0zMi1DSEFSUy1MT05HLVhYWFhYWFhYWFhYWFhY"
+    secret: QW1wbGUtc2l6ZS0yNTYtYml0LUhNQUMtc2VjcmV0LXNob3VsZC1iZS1iYXNlNjQ=
