@@ -76,6 +76,6 @@ class BearerAuthIT {
                         .header("Authorization", "Bearer " + token))
                 .andDo(print())
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().string(""));
+                .andExpect(jsonPath("error").value("unauthorized"));
     }
 }

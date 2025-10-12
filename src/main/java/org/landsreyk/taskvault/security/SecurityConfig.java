@@ -1,5 +1,6 @@
 package org.landsreyk.taskvault.security;
 
+import lombok.RequiredArgsConstructor;
 import org.landsreyk.taskvault.security.jwt.BearerTokenResolver;
 import org.landsreyk.taskvault.security.jwt.JwtAuthenticationEntryPoint;
 import org.landsreyk.taskvault.security.jwt.JwtAuthenticationFilter;
@@ -18,11 +19,13 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableConfigurationProperties(JwtProperties.class)
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     @Bean
@@ -72,22 +75,24 @@ public class SecurityConfig {
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter(TokenService tokenService,
                                                            UserDetailsService uds,
-                                                           BearerTokenResolver resolver) {
-        return new JwtAuthenticationFilter(tokenService, uds, resolver);
+                                                           BearerTokenResolver resolver,
+                                                           AuthenticationEntryPoint entryPoint) {
+        return new JwtAuthenticationFilter(tokenService, uds, resolver, entryPoint);
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    JwtAuthenticationFilter jwtFilter,
                                                    JwtAuthenticationEntryPoint entryPoint) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable);
-        http.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-        http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/health/**", "/api/auth/**").permitAll()
-                .anyRequest().authenticated()
-        );
-        http.exceptionHandling(ex -> ex.authenticationEntryPoint(entryPoint));
-        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        http
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(entryPoint))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/health/**", "/api/auth/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }
