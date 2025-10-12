@@ -1,11 +1,18 @@
 package org.landsreyk.taskvault.security;
 
+import io.jsonwebtoken.JwtException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 class TokenServiceTest {
@@ -36,5 +43,16 @@ class TokenServiceTest {
         var user = userDetailsService.loadUserByUsername("user");
         var token = tokenService.generateAccessToken(user, null);
         assertTrue(tokenService.isTokenValid(token, user));
+    }
+
+    @Test
+    void isTokenValid_returnsFalse_forTamperedToken() {
+        var userDetails = userDetailsService.loadUserByUsername("user");
+        var token = tokenService.generateAccessToken(userDetails, Map.of());
+        assertTrue(tokenService.isTokenValid(token, userDetails)); // control
+
+        var tampered = token + "1";
+        assertFalse(tokenService.isTokenValid(tampered, userDetails));
+        assertThrows(JwtException.class, () -> tokenService.extractUsername(tampered));
     }
 }
