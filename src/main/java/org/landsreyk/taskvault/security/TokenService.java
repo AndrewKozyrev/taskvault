@@ -10,8 +10,12 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class TokenService {
@@ -38,6 +42,26 @@ public class TokenService {
 
     public String extractUsername(String token) {
         return parseSigned(token).getSubject();
+    }
+
+    public List<String> extractRoles(String token) {
+        Claims claims = parseSigned(token);
+        Object raw = claims.get("roles");
+
+        if (raw == null) {
+            return Collections.emptyList();
+        }
+
+        if (raw instanceof Collection<?> c) {
+            return c.stream()
+                    .filter(Objects::nonNull)
+                    .map(Object::toString)
+                    .map(String::trim)
+                    .filter(x -> !x.isEmpty())
+                    .distinct()
+                    .toList();
+        }
+        return List.of(raw.toString());
     }
 
     public boolean isTokenValid(String token, UserDetails user) {

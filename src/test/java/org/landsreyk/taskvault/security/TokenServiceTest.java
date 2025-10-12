@@ -6,8 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
+import java.util.Collections;
 import java.util.Map;
 
+import static java.util.Map.of;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -48,11 +51,32 @@ class TokenServiceTest {
     @Test
     void isTokenValid_returnsFalse_forTamperedToken() {
         var userDetails = userDetailsService.loadUserByUsername("user");
-        var token = tokenService.generateAccessToken(userDetails, Map.of());
+        var token = tokenService.generateAccessToken(userDetails, of());
         assertTrue(tokenService.isTokenValid(token, userDetails)); // control
 
         var tampered = token + "1";
         assertFalse(tokenService.isTokenValid(tampered, userDetails));
         assertThrows(JwtException.class, () -> tokenService.extractUsername(tampered));
+    }
+
+    @Test
+    void extractRoles_returnsClaimOrEmpty() {
+        // given
+        var userDetails = userDetailsService.loadUserByUsername("user");
+
+        // when
+        var tokenWithRoles = tokenService.generateAccessToken(
+                userDetails,
+                Map.of("roles", java.util.List.of("USER","ADMIN")
+        ));
+
+        // then
+        assertEquals(java.util.List.of("USER","ADMIN"), tokenService.extractRoles(tokenWithRoles));
+
+        // when
+        var tokenNoRoles = tokenService.generateAccessToken(userDetails, Collections.emptyMap());
+
+        // then
+        assertThat(tokenService.extractRoles(tokenNoRoles)).isEmpty();
     }
 }
