@@ -1,6 +1,7 @@
 package org.landsreyk.taskvault.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -16,13 +17,11 @@ import java.util.Map;
 public class TokenService {
 
     private final JwtProperties props;
-    private final SecretKey hmacKey;
+    private final SecretKey signingKey;
 
     public TokenService(JwtProperties props) {
         this.props = props;
-        String base64OrAsciiSecret = props.getSecret();
-        byte[] keyBytes = Decoders.BASE64.decode(base64OrAsciiSecret);
-        hmacKey = Keys.hmacShaKeyFor(keyBytes);
+        this.signingKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(props.getSecret()));
     }
 
     public String generateAccessToken(UserDetails principal, Map<String, Object> extraClaims) {
@@ -33,24 +32,32 @@ public class TokenService {
                 .issuer(props.getIssuer())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plus(props.getAccessTtl())))
-                .signWith(hmacKey)
+                .signWith(signingKey)
                 .compact();
     }
 
     public String extractUsername(String token) {
-        return extractAllClaims(token).getSubject();
+        return parseSigned(token).getSubject();
     }
 
     public boolean isTokenValid(String token, UserDetails user) {
-        Claims claims = extractAllClaims(token);
-        Date expiration = claims.getExpiration();
-        Instant now = Instant.now();
-        return extractUsername(token).equals(user.getUsername()) && now.isBefore(expiration.toInstant());
+        try {
+            Claims claims = parseSigned(token);
+            if (!user.getUsername().equals(claims.getSubject())) {
+                return false;
+            }
+            Instant exp = claims.getExpiration().toInstant();
+            return exp.isAfter(Instant.now());
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
     }
 
-    private Claims extractAllClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(hmacKey)
+    private Claims parseSigned(String token) {
+        return Jwts
+                .parser()
+                .verifyWith(signingKey)
+                .requireIssuer(props.getIssuer())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
