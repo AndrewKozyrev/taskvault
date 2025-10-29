@@ -1,10 +1,26 @@
-spring:
-  application:
-    name: taskvault
 server:
   port: 8080
-security:
-  jwt:
-    issuer: taskvault
-    access-ttl: 15m
-    secret: QW1wbGUtc2l6ZS0yNTYtYml0LUhNQUMtc2VjcmV0LXNob3VsZC1iZS1iYXNlNjQ=
+
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASS}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+    default-property-inclusion: non_null
+
+app:
+  name: taskvault
+  env: ${APP_ENV:local}
