@@ -1,6 +1,6 @@
-package org.landsreyk.taskvault.repository;
+package com.taskvault.repository;
 
-import org.landsreyk.taskvault.domain.User;
+import com.taskvault.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserRepository extends JpaRepository<User, Long> {

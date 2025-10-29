@@ -1,4 +1,4 @@
-package org.landsreyk.taskvault.dto;
+package com.taskvault.dto;
 
 import lombok.Builder;
 import lombok.Data;

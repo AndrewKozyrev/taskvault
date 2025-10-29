@@ -1,4 +1,4 @@
-package org.landsreyk.taskvault.dto;
+package com.taskvault.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

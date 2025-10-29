@@ -1,10 +1,10 @@
-package org.landsreyk.taskvault.service;
+package com.taskvault.service;
 
 import lombok.RequiredArgsConstructor;
-import org.landsreyk.taskvault.domain.Workspace;
-import org.landsreyk.taskvault.dto.CreateWorkspaceRequest;
-import org.landsreyk.taskvault.dto.WorkspaceResponse;
-import org.landsreyk.taskvault.repository.WorkspaceRepository;
+import com.taskvault.domain.Workspace;
+import com.taskvault.dto.CreateWorkspaceRequest;
+import com.taskvault.dto.WorkspaceResponse;
+import com.taskvault.repository.WorkspaceRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;

@@ -1,9 +1,10 @@
-package org.landsreyk.taskvault.controller;
+package com.taskvault.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.landsreyk.taskvault.dto.CreateWorkspaceRequest;
-import org.landsreyk.taskvault.dto.WorkspaceResponse;
-import org.landsreyk.taskvault.service.WorkspaceService;
+import com.taskvault.dto.CreateWorkspaceRequest;
+import com.taskvault.dto.WorkspaceResponse;
+import com.taskvault.service.WorkspaceService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,7 +19,7 @@ public class WorkspaceController {
     private final WorkspaceService workspaceService;
 
     @PostMapping("/api/v1/workspaces")
-    public WorkspaceResponse createWorkspace(@RequestBody CreateWorkspaceRequest request) {
+    public WorkspaceResponse createWorkspace(@Valid @RequestBody CreateWorkspaceRequest request) {
         return workspaceService.createWorkspace(request);
     }
 
