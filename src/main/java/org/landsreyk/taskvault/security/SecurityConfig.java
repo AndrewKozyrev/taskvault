@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.landsreyk.taskvault.security.jwt.BearerTokenResolver;
 import org.landsreyk.taskvault.security.jwt.JwtAuthenticationEntryPoint;
 import org.landsreyk.taskvault.security.jwt.JwtAuthenticationFilter;
+import org.landsreyk.taskvault.security.jwt.JwtAuthoritiesConverter;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -76,8 +77,9 @@ public class SecurityConfig {
     public JwtAuthenticationFilter jwtAuthenticationFilter(TokenService tokenService,
                                                            UserDetailsService uds,
                                                            BearerTokenResolver resolver,
-                                                           AuthenticationEntryPoint entryPoint) {
-        return new JwtAuthenticationFilter(tokenService, uds, resolver, entryPoint);
+                                                           AuthenticationEntryPoint entryPoint,
+                                                           JwtAuthoritiesConverter jwtAuthoritiesConverter) {
+        return new JwtAuthenticationFilter(tokenService, uds, resolver, entryPoint, jwtAuthoritiesConverter);
     }
 
     @Bean

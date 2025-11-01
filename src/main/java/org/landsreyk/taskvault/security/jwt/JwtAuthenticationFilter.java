@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.landsreyk.taskvault.security.TokenService;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -17,6 +19,8 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -27,6 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
     private final BearerTokenResolver tokenResolver;
     private final AuthenticationEntryPoint entryPoint;
+    private final JwtAuthoritiesConverter authoritiesConverter;
 
     private static final Set<String> PUBLIC_PREFIXES = Set.of("/api/health", "/api/auth");
 
@@ -47,6 +52,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = tokenOpt.get();
         try {
             String username = tokenService.extractUsername(token);
+            List<String> roles = tokenService.extractRoles(token);
+            if (!roles.isEmpty()) {
+                Collection<? extends GrantedAuthority> authorities = authoritiesConverter.fromRoles(roles);
+                UserDetails tmpUser = org.springframework.security.core.userdetails.User
+                        .withUsername(username)
+                        .password("N/A")
+                        .authorities(authorities)
+                        .build();
+                if (!tokenService.isTokenValid(token, tmpUser)) {
+                    entryPoint.commence(request, response, new BadCredentialsException("Invalid JWT"));
+                    return;
+                }
+                UsernamePasswordAuthenticationToken auth =
+                        new UsernamePasswordAuthenticationToken(username, null, authorities);
+                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+                ctx.setAuthentication(auth);
+                SecurityContextHolder.setContext(ctx);
+                chain.doFilter(request, response);
+                return;
+            }
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             if (!tokenService.isTokenValid(token, userDetails)) {
                 entryPoint.commence(request, response, new BadCredentialsException("Invalid JWT"));
